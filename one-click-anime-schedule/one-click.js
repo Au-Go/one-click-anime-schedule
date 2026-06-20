@@ -315,9 +315,10 @@ function httpPostJson(url, body, extraHeaders = {}) {
         headers: headers,
         timeout: 30000
       }, (response) => {
-        let data = '';
-        response.on('data', chunk => data += chunk);
+        const chunks = [];
+        response.on('data', chunk => chunks.push(chunk));
         response.on('end', () => {
+          const data = Buffer.concat(chunks).toString('utf-8');
           const setCookies = response.headers['set-cookie'] || [];
           let token = null;
           for (const c of setCookies) {
@@ -365,9 +366,10 @@ function httpPostJson(url, body, extraHeaders = {}) {
           createConnection: () => tlsSocket,
           timeout: 30000
         }, (response) => {
-          let data = '';
-          response.on('data', chunk => data += chunk);
+          const chunks = [];
+          response.on('data', chunk => chunks.push(chunk));
           response.on('end', () => {
+            const data = Buffer.concat(chunks).toString('utf-8');
             const setCookies = response.headers['set-cookie'] || [];
             let token = null;
             for (const c of setCookies) {
@@ -393,9 +395,10 @@ function httpPostJson(url, body, extraHeaders = {}) {
         headers: headers,
         timeout: 30000
       }, (response) => {
-        let data = '';
-        response.on('data', chunk => data += chunk);
+        const chunks = [];
+        response.on('data', chunk => chunks.push(chunk));
         response.on('end', () => {
+          const data = Buffer.concat(chunks).toString('utf-8');
           const setCookies = response.headers['set-cookie'] || [];
           let token = null;
           for (const c of setCookies) {
@@ -433,9 +436,12 @@ function httpGet(url, options = {}) {
         headers: headers,
         timeout: 60000
       }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => resolve({ status: res.statusCode, data, headers: res.headers }));
+        const chunks = [];
+        res.on('data', chunk => chunks.push(chunk));
+        res.on('end', () => {
+          const data = Buffer.concat(chunks).toString('utf-8');
+          resolve({ status: res.statusCode, data, headers: res.headers });
+        });
       });
       req.on('error', reject);
       req.on('timeout', () => { req.destroy(); reject(new Error('Request timeout')); });
@@ -473,9 +479,12 @@ function httpGet(url, options = {}) {
           createConnection: () => tlsSocket,
           timeout: 60000
         }, (response) => {
-          let data = '';
-          response.on('data', chunk => data += chunk);
-          response.on('end', () => resolve({ status: response.statusCode, data, headers: response.headers }));
+          const chunks = [];
+          response.on('data', chunk => chunks.push(chunk));
+          response.on('end', () => {
+            const data = Buffer.concat(chunks).toString('utf-8');
+            resolve({ status: response.statusCode, data, headers: response.headers });
+          });
         });
         httpsReq.on('error', reject);
         httpsReq.on('timeout', () => { httpsReq.destroy(); reject(new Error('Request timeout')); });
@@ -491,9 +500,12 @@ function httpGet(url, options = {}) {
         headers: headers,
         timeout: 60000
       }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => resolve({ status: res.statusCode, data, headers: res.headers }));
+        const chunks = [];
+        res.on('data', chunk => chunks.push(chunk));
+        res.on('end', () => {
+          const data = Buffer.concat(chunks).toString('utf-8');
+          resolve({ status: res.statusCode, data, headers: res.headers });
+        });
       });
       req.on('error', reject);
       req.on('timeout', () => { req.destroy(); reject(new Error('Request timeout')); });
@@ -672,6 +684,7 @@ async function collectAnimeData(year, season) {
   const requireTag = '日本';
   const minEps = 1;
   const allEntries = [];
+  const seenIds = new Set(); // 用于跨月份去重
 
   for (const month of months) {
     let fetchYear = year;
@@ -683,6 +696,15 @@ async function collectAnimeData(year, season) {
 
     for (let i = 0; i < filtered.length; i++) {
       const entry = filtered[i];
+      const bgmId = entry.id;
+
+      // 跨月份去重：同一 bgm_id 只收集一次
+      if (bgmId && seenIds.has(bgmId)) {
+        console.error(`  [跳过重复] ${entry.name} (BGM ID: ${bgmId})`);
+        continue;
+      }
+      if (bgmId) seenIds.add(bgmId);
+
       const info = extractEntryInfo(entry, fetchYear, month);
 
       // 回退：如果 infobox 没有制作公司信息，从 persons API 获取
@@ -1228,9 +1250,8 @@ function generateHTML(entries, seasonKey, year) {
   const yomiOrderList = ['日', '月', '火', '水', '木', '金', '土'];
 
   for (const e of entries) {
-    e._displayTime = e.hour >= 24
-      ? `${String(e.hour - 24).padStart(2, '0')}:${e.minute.toString().padStart(2, '0')}`
-      : e.time;
+    // 保持30小时制显示（如 26:00 而非 02:00）
+    e._displayTime = `${String(e.hour).padStart(2, '0')}:${e.minute.toString().padStart(2, '0')}`;
     e._dateDisplay = `${e.month}月${e.day}日`;
   }
 
