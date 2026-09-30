@@ -1620,7 +1620,32 @@ async function main() {
     console.error(`[完成] 已匹配: ${found}/${results.length}`);
     console.error(`[完成] 已写入: ${mergedFile}`);
 
-    console.error('\n[步骤] Step 3: 生成放送时间表...');
+    // ========== 手动补充环节 ==========
+    console.error('\n[步骤] 可选：手动补充条目');
+    const wantEdit = await askQuestion('是否要手动添加条目？(y/N): ');
+
+    if (wantEdit && (wantEdit.toLowerCase() === 'y' || wantEdit.toLowerCase() === 'yes')) {
+      console.error('\n请在任意文本编辑器中打开以下文件，按现有格式在末尾追加条目：');
+      console.error(`  ${mergedFile}\n`);
+      console.error('每条格式示例：');
+      console.error('  99. 动画原名');
+      console.error('     BGM ID: 123456');
+      console.error('     中文名: 动画中文名');
+      console.error('     类型: 原创');
+      console.error('     动画制作: XXX动画');
+      console.error('     放送日期: 2026年10月5日');
+      console.error('     放送时间(JST): 23:00 (周六)');
+      console.error('     放送平台: TOKYO MX');
+      console.error('\n注意：放送时间(JST) 和 放送日期 是必需的，缺少任一项该条目会被跳过。');
+      console.error('\n编辑并保存文件后，回到此处按回车继续...');
+      await askQuestion('');
+      console.error('[继续] 已读取最新文件内容\n');
+    } else {
+      console.error('[跳过] 不进行手动编辑\n');
+    }
+    // ========== 手动补充环节结束 ==========
+
+    console.error('[步骤] Step 3: 生成放送时间表...');
 
     const entries = parseEntries(mergedFile);
     if (entries.length === 0) {
