@@ -1123,7 +1123,7 @@ function matchAnime(userList, bgmData) {
       const jstMs = eventDate.getTime() + 9 * 60 * 60 * 1000;
       const jstDate = new Date(jstMs);
 
-      const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const weekdays = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
       let weekday = weekdays[jstDate.getUTCDay()];
 
       let hours = jstDate.getUTCHours();
@@ -1175,7 +1175,9 @@ function generateMergedOutput(results, fromDate, toDate, originalContent) {
     }
   }
 
-  const originalLines = originalContent.split('\n');
+const statsIdx = originalContent.indexOf('===统计信息===');
+const contentOnly = statsIdx >= 0 ? originalContent.slice(0, statsIdx) : originalContent;
+const originalLines = contentOnly.split('\n');
   let currentNum = 0;
   let currentResult = null;
   let inMatchedEntry = false;
@@ -1279,7 +1281,7 @@ function parseEntries(filePath) {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const entries = [];
   const blocks = raw.split(/^\d+\.\s/m).filter(b => b.trim());
-  const dayMap = { '周日': '日', '周一': '一', '周二': '二', '周三': '三', '周四': '四', '周五': '五', '周六': '六' };
+  const dayMap = { '日曜日': '日', '月曜日': '月', '火曜日': '火', '水曜日': '水', '木曜日': '木', '金曜日': '金', '土曜日': '土' };
 
   for (const block of blocks) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
@@ -1322,7 +1324,7 @@ function parseEntries(filePath) {
 }
 
 function sortEntries(entries) {
-  const yomiOrder = { '日': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6 };
+  const yomiOrder = { '日': 0, '月': 1, '火': 2, '水': 3, '木': 4, '金': 5, '土': 6 };
   entries.sort((a, b) => {
     const ya = yomiOrder[a.yomi] ?? 7, yb = yomiOrder[b.yomi] ?? 7;
     if (ya !== yb) return ya - yb;
@@ -1343,7 +1345,7 @@ function groupByYomi(entries) {
 function generateHTML(entries, seasonKey, year) {
   const S = SEASONS[seasonKey];
   const groups = groupByYomi(entries);
-  const yomiOrderList = ['日', '一', '二', '三', '四', '五', '六'];
+  const yomiOrderList = ['日', '月', '火', '水', '木', '金', '土'];
 
   for (const e of entries) {
     e._displayTime = `${String(e.hour).padStart(2, '0')}:${e.minute.toString().padStart(2, '0')}`;
@@ -1477,7 +1479,7 @@ function generateHTML(entries, seasonKey, year) {
   <table class="schedule-table">
     <thead>
       <tr>
-        <th style="width:56px">星期</th>
+        <th style="width:56px">曜日</th>
         <th style="width:1.6em">日期</th>
         <th style="width:1.6em">时间</th>
         <th style="width:10em">原名</th>
@@ -1636,7 +1638,7 @@ async function main() {
       console.error('     放送日期: 2026年10月5日');
       console.error('     放送时间(JST): 23:00 (周六)');
       console.error('     放送平台: TOKYO MX');
-      console.error('\n注意：放送时间(JST) 和 放送日期 是必需的，缺少任一项该条目会被跳过。');
+      console.error('\n注意：放送时间(JST,30小时制) 和 放送日期 是必需的，缺少任一项该条目会被跳过。');
       console.error('\n编辑并保存文件后，回到此处按回车继续...');
       await askQuestion('');
       console.error('[继续] 已读取最新文件内容\n');
