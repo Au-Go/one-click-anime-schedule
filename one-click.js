@@ -1636,7 +1636,7 @@ async function main() {
       console.error('     类型: 原创');
       console.error('     动画制作: XXX动画');
       console.error('     放送日期: 2026年10月5日');
-      console.error('     放送时间(JST): 23:00 (周六)');
+      console.error('     放送时间(JST): 23:00 (土曜日)');
       console.error('     放送平台: TOKYO MX');
       console.error('\n注意：放送时间(JST,30小时制) 和 放送日期 是必需的，缺少任一项该条目会被跳过。');
       console.error('\n编辑并保存文件后，回到此处按回车继续...');
